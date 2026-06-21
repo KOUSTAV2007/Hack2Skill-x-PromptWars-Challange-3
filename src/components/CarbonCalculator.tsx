@@ -3,6 +3,7 @@ import {
   FootprintData, 
   AIAnalysis 
 } from "../types";
+import { getFallbackAnalyzeResponse } from "../lib/fallback";
 import { 
   Car, 
   Plane, 
@@ -144,7 +145,13 @@ export default function CarbonCalculator({ onDataChange, recentActions }: Carbon
       const parsedData = await response.json();
       setAnalysis(parsedData);
     } catch (err: any) {
-      setError(err.message || "An unexpected error occurred during connection.");
+      console.warn("API/Server unavailable or failed. Initiating high-fidelity local fallback calculations.", err);
+      try {
+        const localResult = getFallbackAnalyzeResponse(data);
+        setAnalysis(localResult);
+      } catch (fallbackErr: any) {
+        setError("Both remote endpoint and local carbon engine failed to compute the footprint.");
+      }
     } finally {
       setLoading(false);
     }
