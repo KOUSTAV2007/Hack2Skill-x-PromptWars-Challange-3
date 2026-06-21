@@ -68,6 +68,47 @@ const RECYCLING_FACTORS: Record<string, number> = {
   strict_zero_waste: 150
 };
 
+const CarbonDistributionChart = React.memo(function CarbonDistributionChart({ chartData }: { chartData: any[] }) {
+  if (chartData.length === 0) {
+    return (
+      <div className="h-full flex items-center justify-center text-zinc-400 text-xs">
+        Zero parameters tracked.
+      </div>
+    );
+  }
+
+  return (
+    <ResponsiveContainer width="100%" height="100%">
+      <PieChart>
+        <Pie
+          data={chartData}
+          cx="55%"
+          cy="45%"
+          innerRadius={45}
+          outerRadius={65}
+          paddingAngle={3}
+          dataKey="value"
+        >
+          {chartData.map((entry: any, index: number) => (
+            <Cell key={`cell-${index}`} fill={entry.color} />
+          ))}
+        </Pie>
+        <Tooltip 
+          formatter={(value) => [`${value} kg CO2`, 'Impact']} 
+          contentStyle={{ borderRadius: "8px", border: "1px solid #181c20", background: "#18181b", color: "#f4f4f5", fontSize: "11px" }}
+        />
+        <Legend 
+          layout="horizontal" 
+          verticalAlign="bottom" 
+          align="center"
+          iconSize={6}
+          wrapperStyle={{ fontSize: "9px", marginTop: "5px", textTransform: "uppercase", fontWeight: "900" }}
+        />
+      </PieChart>
+    </ResponsiveContainer>
+  );
+});
+
 export default function CarbonCalculator({ onDataChange, recentActions }: CarbonCalculatorProps) {
   const [data, setData] = useState<FootprintData>({
     transportDistance: 120,
@@ -90,7 +131,7 @@ export default function CarbonCalculator({ onDataChange, recentActions }: Carbon
   }, [data]);
 
   // Handle analytical metrics calculation strictly client-side for latency-free display
-  const calculateEmissions = () => {
+  const emissionsBreakdown = React.useMemo(() => {
     const weeklyDistance = data.transportDistance;
     const factor = TRANSPORT_FACTORS[data.transportType] || 0;
     const transportEmissions = weeklyDistance * 52 * factor; // kg per year
@@ -118,18 +159,16 @@ export default function CarbonCalculator({ onDataChange, recentActions }: Carbon
       waste: Math.round(wasteEmissions),
       total: Number(totalTons.toFixed(1))
     };
-  };
+  }, [data]);
 
-  const emissionsBreakdown = calculateEmissions();
-
-  const chartData = [
+  const chartData = React.useMemo(() => [
     { name: "Transport", value: emissionsBreakdown.transport, color: "#18181b" }, // Charcoal
     { name: "Flights", value: emissionsBreakdown.flights, color: "#27272a" },
     { name: "Home Energy", value: emissionsBreakdown.energy, color: "#a3e635" }, // Lime
     { name: "Heating", value: emissionsBreakdown.heating, color: "#d9f99d" }, // Light Lime
     { name: "Diet Choices", value: emissionsBreakdown.diet, color: "#52525b" },
     { name: "Waste & Life", value: emissionsBreakdown.waste, color: "#71717a" }
-  ].filter(d => d.value > 0);
+  ].filter(d => d.value > 0), [emissionsBreakdown]);
 
   const fetchAIAnalysis = async () => {
     setLoading(true);
@@ -457,42 +496,7 @@ You MUST follow this exact JSON structure for your response. Do not output anyth
             </div>
 
             {/* Minimal dynamic canvas representation */}
-            <div className="h-44 mt-2">
-              {chartData.length > 0 ? (
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={chartData}
-                      cx="55%"
-                      cy="45%"
-                      innerRadius={45}
-                      outerRadius={65}
-                      paddingAngle={3}
-                      dataKey="value"
-                    >
-                      {chartData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip 
-                      formatter={(value) => [`${value} kg CO2`, 'Impact']} 
-                      contentStyle={{ borderRadius: "8px", border: "1px solid #181c20", background: "#18181b", color: "#f4f4f5", fontSize: "11px" }}
-                    />
-                    <Legend 
-                      layout="horizontal" 
-                      verticalAlign="bottom" 
-                      align="center"
-                      iconSize={6}
-                      wrapperStyle={{ fontSize: "9px", marginTop: "5px", textTransform: "uppercase", fontWeight: "900" }}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="h-full flex items-center justify-center text-zinc-400 text-xs">
-                  Zero parameters tracked.
-                </div>
-              )}
-            </div>
+            <CarbonDistributionChart chartData={chartData} />
           </div>
         </div>
         {/* AI Diagnostics Output Box - Slate style with high contrast */}

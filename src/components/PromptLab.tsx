@@ -49,6 +49,63 @@ const TONE_PRESETS = [
   { name: "Technical / Academic", value: "clinical, academic, rigorous, scientific" }
 ];
 
+interface PersonaSandboxCardsProps {
+  selectedPersonaId: string;
+  onSelect: (p: typeof PERSONA_PRESETS[0]) => void;
+}
+
+const PersonaSandboxCards = React.memo(function PersonaSandboxCards({ selectedPersonaId, onSelect }: PersonaSandboxCardsProps) {
+  return (
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+      {PERSONA_PRESETS.map((p) => (
+        <button
+          key={p.id}
+          type="button"
+          onClick={() => onSelect(p)}
+          aria-label={`Select system role persona: ${p.name}`}
+          className={`text-left p-3 border rounded-xl transition-all cursor-pointer flex flex-col justify-between h-24 ${
+            selectedPersonaId === p.id 
+              ? "border-zinc-900 bg-zinc-900 text-lime-400" 
+              : "border-zinc-200 bg-zinc-50 text-zinc-500 hover:bg-zinc-100"
+          }`}
+        >
+          <span className={`text-[10px] font-black uppercase tracking-tight leading-none ${selectedPersonaId === p.id ? "text-lime-400" : "text-zinc-800"}`}>
+            {p.name}
+          </span>
+          <span className="text-[8px] font-semibold leading-tight line-clamp-3 mt-1.5 text-zinc-450">
+            {p.role}
+          </span>
+        </button>
+      ))}
+    </div>
+  );
+});
+
+interface PromptCompilationsConsoleProps {
+  customRole: string;
+  compiledUserPrompt: string;
+}
+
+const PromptCompilationsConsole = React.memo(function PromptCompilationsConsole({ customRole, compiledUserPrompt }: PromptCompilationsConsoleProps) {
+  return (
+    <div className="space-y-4 font-mono text-[10px] leading-relaxed">
+      <div>
+        <p className="text-lime-300 font-extrabold uppercase tracking-widest text-[9px]">SYSTEM_INSTRUCTIONS & ROLE:</p>
+        <p className="bg-zinc-950 p-3 rounded-xl border border-zinc-800 text-zinc-400 max-h-24 overflow-y-auto mt-1 font-mono">
+          {customRole}
+        </p>
+      </div>
+
+      <div>
+        <p className="text-zinc-350 font-extrabold uppercase tracking-widest text-[9px]">USER_MESSAGE (Variables Injected):</p>
+        <pre className="bg-zinc-950 p-3 rounded-xl border border-zinc-800 text-zinc-400 max-h-48 overflow-y-auto mt-1 whitespace-pre-wrap font-mono">
+          {compiledUserPrompt.trim()}
+        </pre>
+      </div>
+    </div>
+  );
+});
+
 export default function PromptLab({ currentFootprint }: PromptLabProps) {
   const [selectedPersona, setSelectedPersona] = useState(PERSONA_PRESETS[0]);
   const [selectedObjective, setSelectedObjective] = useState(OBJECTIVE_PRESETS[0]);
@@ -80,7 +137,7 @@ export default function PromptLab({ currentFootprint }: PromptLabProps) {
     setCustomConstraint(c.limit);
   };
 
-  const getCompiledUserPrompt = () => {
+  const compiledUserPrompt = React.useMemo(() => {
     return `
 MY ECO METRICS DETAILED:
 - Transport Travel: ${currentFootprint.transportDistance} km/week using ${currentFootprint.transportType}
@@ -97,7 +154,7 @@ OPERATIONAL CONSTRAINTS TO ENFORCE STRICTLY:
 - Tone Style: Deliver recommendations in a ${selectedTone} rhythm.
 - Restriction: ${customConstraint}
 `;
-  };
+  }, [currentFootprint, customObjective, selectedTone, customConstraint]);
 
   const executeEngineeredPrompt = async () => {
     setLoading(true);
@@ -256,28 +313,7 @@ OPERATIONAL CONSTRAINTS TO ENFORCE STRICTLY:
               <span className="text-2xl font-black text-zinc-350 leading-none">01</span>
               System Role / Persona Instruction
             </label>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-              {PERSONA_PRESETS.map((p) => (
-                <button
-                  key={p.id}
-                  type="button"
-                  onClick={() => applyPersona(p)}
-                  aria-label={`Select system role persona: ${p.name}`}
-                  className={`text-left p-3 border rounded-xl transition-all cursor-pointer flex flex-col justify-between h-24 ${
-                    selectedPersona.id === p.id 
-                      ? "border-zinc-900 bg-zinc-900 text-lime-400" 
-                      : "border-zinc-200 bg-zinc-50 text-zinc-500 hover:bg-zinc-100"
-                  }`}
-                >
-                  <span className={`text-[10px] font-black uppercase tracking-tight leading-none ${selectedPersona.id === p.id ? "text-lime-400" : "text-zinc-800"}`}>
-                    {p.name}
-                  </span>
-                  <span className={`text-[8px] font-semibold leading-tight line-clamp-3 mt-1.5 ${selectedPersona.id === p.id ? "text-zinc-400" : "text-zinc-400"}`}>
-                    {p.role}
-                  </span>
-                </button>
-              ))}
-            </div>
+            <PersonaSandboxCards selectedPersonaId={selectedPersona.id} onSelect={applyPersona} />
             <textarea
               value={customRole}
               onChange={(e) => setCustomRole(e.target.value)}
@@ -403,7 +439,7 @@ OPERATIONAL CONSTRAINTS TO ENFORCE STRICTLY:
               </span>
               <button 
                 type="button"
-                onClick={() => copyToClipboard(`system_instruction = "${customRole}"\n\ncompiled_prompt = "${getCompiledUserPrompt()}"`)}
+                onClick={() => copyToClipboard(`system_instruction = "${customRole}"\n\ncompiled_prompt = "${compiledUserPrompt}"`)}
                 className="text-zinc-500 hover:text-white transition-all text-[9px] font-black uppercase tracking-wider flex items-center gap-1 border border-zinc-800 px-2.5 py-1.5 rounded-lg cursor-pointer bg-zinc-850"
                 aria-label="Save engineered prompt to clipboard"
               >
@@ -411,21 +447,7 @@ OPERATIONAL CONSTRAINTS TO ENFORCE STRICTLY:
               </button>
             </div>
 
-            <div className="space-y-4 font-mono text-[10px] leading-relaxed">
-              <div>
-                <p className="text-lime-300 font-extrabold uppercase tracking-widest text-[9px]">SYSTEM_INSTRUCTIONS & ROLE:</p>
-                <p className="bg-zinc-950 p-3 rounded-xl border border-zinc-800 text-zinc-400 max-h-24 overflow-y-auto mt-1 font-mono">
-                  {customRole}
-                </p>
-              </div>
-
-              <div>
-                <p className="text-zinc-300 font-extrabold uppercase tracking-widest text-[9px]">USER_MESSAGE (Variables Injected):</p>
-                <pre className="bg-zinc-950 p-3 rounded-xl border border-zinc-800 text-zinc-400 max-h-48 overflow-y-auto mt-1 whitespace-pre-wrap font-mono">
-                  {getCompiledUserPrompt().trim()}
-                </pre>
-              </div>
-            </div>
+            <PromptCompilationsConsole customRole={customRole} compiledUserPrompt={compiledUserPrompt} />
 
             <button
               onClick={executeEngineeredPrompt}
