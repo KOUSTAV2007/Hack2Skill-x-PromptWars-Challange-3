@@ -102,10 +102,10 @@ export default function ActionTracker({ onActionsChange }: ActionTrackerProps) {
 
   const getCategoryIcon = (category: string) => {
     switch (category) {
-      case "Transport": return <Car className="h-4 w-4 text-zinc-900" />;
-      case "Food": return <Utensils className="h-4 w-4 text-zinc-900" />;
-      case "Waste": return <Trash2 className="h-4 w-4 text-zinc-900" />;
-      default: return <Zap className="h-4 w-4 text-zinc-900" />;
+      case "Transport": return <Car className="h-4 w-4 text-zinc-900" aria-hidden="true" />;
+      case "Food": return <Utensils className="h-4 w-4 text-zinc-900" aria-hidden="true" />;
+      case "Waste": return <Trash2 className="h-4 w-4 text-zinc-900" aria-hidden="true" />;
+      default: return <Zap className="h-4 w-4 text-zinc-900" aria-hidden="true" />;
     }
   };
 
@@ -118,7 +118,7 @@ export default function ActionTracker({ onActionsChange }: ActionTrackerProps) {
   };
 
   return (
-    <div id="action_tracker_block" className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start animate-fade-in">
+    <section id="action_tracker_block" className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start animate-fade-in" aria-labelledby="actions_header_title">
       {/* Interactive Actions List */}
       <div id="tracker_list_wrapper" className="lg:col-span-8 bg-white p-6 md:p-10 rounded-3xl border border-zinc-200 shadow-xs space-y-8">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-zinc-200 pb-5 gap-4">
@@ -130,14 +130,14 @@ export default function ActionTracker({ onActionsChange }: ActionTrackerProps) {
             <p className="text-zinc-400 text-xs font-medium mt-1">Surgical logs representing verified lower consumption benchmarks.</p>
           </div>
           <div className="bg-lime-300 border border-zinc-900 py-1.5 px-3.5 rounded-xl text-zinc-950 text-xs font-bold uppercase tracking-wider flex items-center gap-2">
-            <Award className="h-4 w-4 text-zinc-950" />
+            <Award className="h-4 w-4 text-zinc-950" aria-hidden="true" />
             <span>{completedActions.length} completed this week</span>
           </div>
         </div>
 
         <div className="space-y-4">
           {actions.map((act) => (
-            <div
+            <article
               key={act.id}
               className={`flex items-center justify-between p-4.5 rounded-2xl border transition-all ${
                 act.completed 
@@ -149,13 +149,14 @@ export default function ActionTracker({ onActionsChange }: ActionTrackerProps) {
                 <button
                   type="button"
                   onClick={() => handleToggleCompleted(act.id)}
+                  aria-label={`Toggle completion of action: ${act.title}`}
                   className={`h-5 w-5 rounded-md flex items-center justify-center border cursor-pointer transition-all shrink-0 ${
                     act.completed 
                       ? "bg-zinc-900 border-zinc-900 text-lime-400" 
                       : "border-zinc-350 hover:border-zinc-900 bg-white"
                   }`}
                 >
-                  {act.completed && <Check className="h-3.5 w-3.5 stroke-[3]" />}
+                  {act.completed && <Check className="h-3.5 w-3.5 stroke-[3]" aria-hidden="true" />}
                 </button>
                 
                 <div className="min-w-0">
@@ -183,23 +184,24 @@ export default function ActionTracker({ onActionsChange }: ActionTrackerProps) {
                   onClick={() => handleDeleteAction(act.id)}
                   className="text-zinc-300 hover:text-zinc-900 p-1.5 rounded-lg hover:bg-zinc-50 transition-all cursor-pointer"
                   title="Remove Action"
+                  aria-label={`Delete custom action: ${act.title}`}
                 >
-                  <Trash2 className="h-3.5 w-3.5" />
+                  <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
                 </button>
               </div>
-            </div>
+            </article>
           ))}
 
           {actions.length === 0 && (
             <div className="text-center py-12 bg-zinc-50 rounded-2xl border border-zinc-200">
-              <Activity className="h-8 w-8 text-zinc-300 mx-auto mb-2" />
+              <Activity className="h-8 w-8 text-zinc-300 mx-auto mb-2" aria-hidden="true" />
               <p className="text-xs text-zinc-500 font-medium">No actions tracked. Create a custom template below!</p>
             </div>
           )}
         </div>
 
         {/* Custom Actions Input Box */}
-        <form onSubmit={handleAddCustomAction} className="pt-6 border-t border-zinc-200 space-y-4">
+        <form onSubmit={handleAddCustomAction} className="pt-6 border-t border-zinc-200 space-y-4" aria-label="Add custom sustainability action form">
           <h4 className="text-xs font-black text-zinc-900 uppercase tracking-wider">Log a Custom Carbon Mitigation Effort</h4>
           
           <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
@@ -209,6 +211,7 @@ export default function ActionTracker({ onActionsChange }: ActionTrackerProps) {
                 placeholder="e.g. Recycled a composite circuit board..."
                 value={customTitle}
                 onChange={(e) => setCustomTitle(e.target.value)}
+                aria-label="Custom sustainability action description"
                 className="w-full text-xs py-3 px-4 rounded-xl border border-zinc-250 text-zinc-800 bg-white placeholder-zinc-400 focus:border-zinc-900 focus:outline-hidden font-medium"
               />
             </div>
@@ -217,6 +220,7 @@ export default function ActionTracker({ onActionsChange }: ActionTrackerProps) {
               <select
                 value={customCategory}
                 onChange={(e: any) => setCustomCategory(e.target.value)}
+                aria-label="Select custom action category"
                 className="w-full text-xs py-3 px-3 bg-white border border-zinc-250 rounded-xl text-zinc-800 font-bold uppercase tracking-wider focus:outline-hidden"
               >
                 <option value="Transport">Transport</option>
@@ -230,6 +234,7 @@ export default function ActionTracker({ onActionsChange }: ActionTrackerProps) {
               <select
                 value={customImpact}
                 onChange={(e: any) => setCustomImpact(e.target.value)}
+                aria-label="Select custom action impact level"
                 className="w-full text-xs py-3 px-2 bg-white border border-zinc-250 rounded-xl text-zinc-800 font-bold uppercase tracking-wider focus:outline-hidden"
               >
                 <option value="High">High (X-CO2)</option>
@@ -241,8 +246,9 @@ export default function ActionTracker({ onActionsChange }: ActionTrackerProps) {
                 type="submit"
                 className="aspect-square bg-zinc-900 border border-zinc-950 text-lime-400 font-black flex items-center justify-center rounded-xl hover:bg-zinc-800 transition-all cursor-pointer whitespace-nowrap px-4 text-xs"
                 title="Add Custom Action"
+                aria-label="Add custom action"
               >
-                <Plus className="h-4 w-4 shrink-0" />
+                <Plus className="h-4 w-4 shrink-0" aria-hidden="true" />
               </button>
             </div>
           </div>
@@ -250,7 +256,7 @@ export default function ActionTracker({ onActionsChange }: ActionTrackerProps) {
       </div>
 
       {/* Aggregate Score Panel */}
-      <div id="tracker_score_panel" className="lg:col-span-4 bg-white p-6 md:p-8 rounded-3xl border border-zinc-200 shadow-xs space-y-8">
+      <aside id="tracker_score_panel" className="lg:col-span-4 bg-white p-6 md:p-8 rounded-3xl border border-zinc-200 shadow-xs space-y-8" aria-label="Habits CO2 offset statistics">
         <div>
           <h4 className="text-xs font-black text-zinc-400 uppercase tracking-wider">Atmospheric saved offsets</h4>
           <p className="text-xs text-zinc-500 font-medium mt-1">Realtime metric output reflecting certified habit compliance.</p>
@@ -275,44 +281,44 @@ export default function ActionTracker({ onActionsChange }: ActionTrackerProps) {
           <h5 className="font-black text-[10px] text-zinc-400 uppercase tracking-widest">Achieved Eco Badges</h5>
           
           <div className="space-y-3">
-            <div className={`p-4 rounded-2xl border flex items-center gap-3 transition-all ${
+            <article className={`p-4 rounded-2xl border flex items-center gap-3 transition-all ${
               totalSavedCo2 >= 5 ? "bg-zinc-50 border-zinc-900 text-zinc-900 shadow-3xs" : "bg-zinc-50/20 border-zinc-150 text-zinc-400"
-            }`}>
+            }`} aria-label="Level 1: Carbon Initiate Badge">
               <span className={`p-1.5 rounded-lg ${totalSavedCo2 >= 5 ? "bg-lime-300 text-zinc-900 border border-zinc-900" : "bg-white text-zinc-300"}`}>
-                <Leaf className="h-4 w-4" />
+                <Leaf className="h-4 w-4" aria-hidden="true" />
               </span>
               <div>
                 <p className="text-xs font-black uppercase tracking-tight leading-normal">Carbon Initiate Badge</p>
                 <span className="text-[9px] text-zinc-400 font-bold uppercase tracking-wider mt-0.5 block">Threshold met: 5kg CO2 saving</span>
               </div>
-            </div>
+            </article>
 
-            <div className={`p-4 rounded-2xl border flex items-center gap-3 transition-all ${
+            <article className={`p-4 rounded-2xl border flex items-center gap-3 transition-all ${
               totalSavedCo2 >= 15 ? "bg-zinc-50 border-zinc-900 text-zinc-900 shadow-3xs" : "bg-zinc-50/20 border-zinc-150 text-zinc-400"
-            }`}>
+            }`} aria-label="Level 2: Climate Tactician Badge">
               <span className={`p-1.5 rounded-lg ${totalSavedCo2 >= 15 ? "bg-lime-350 text-zinc-900 border border-zinc-900" : "bg-white text-zinc-300"}`}>
-                <Award className="h-4 w-4" />
+                <Award className="h-4 w-4" aria-hidden="true" />
               </span>
               <div>
                 <p className="text-xs font-black uppercase tracking-tight leading-normal">Climate Tactician</p>
                 <span className="text-[9px] text-zinc-400 font-bold uppercase tracking-wider mt-0.5 block">Requires 15kg to unlock</span>
               </div>
-            </div>
+            </article>
 
-            <div className={`p-4 rounded-2xl border flex items-center gap-3 transition-all ${
+            <article className={`p-4 rounded-2xl border flex items-center gap-3 transition-all ${
               totalSavedCo2 >= 30 ? "bg-zinc-50 border-zinc-900 text-zinc-900 shadow-3xs" : "bg-zinc-50/20 border-zinc-150 text-zinc-400"
-            }`}>
+            }`} aria-label="Level 3: Zero Carbon Alchemist Badge">
               <span className={`p-1.5 rounded-lg ${totalSavedCo2 >= 30 ? "bg-lime-400 text-zinc-900 border border-zinc-900" : "bg-white text-zinc-300"}`}>
-                <Sparkles className="h-4 w-4" />
+                <Sparkles className="h-4 w-4" aria-hidden="true" />
               </span>
               <div>
                 <p className="text-xs font-black uppercase tracking-tight leading-normal">Zero Carbon Alchemist</p>
                 <span className="text-[9px] text-zinc-400 font-bold uppercase tracking-wider mt-0.5 block">Requires 30kg of emissions saved</span>
               </div>
-            </div>
+            </article>
           </div>
         </div>
-      </div>
-    </div>
+      </aside>
+    </section>
   );
 }

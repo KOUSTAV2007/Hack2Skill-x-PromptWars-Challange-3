@@ -14,7 +14,7 @@ app.use(express.json());
 // Lazy initialization of GenAI client
 let _ai: GoogleGenAI | null = null;
 function getGenAIClient(): GoogleGenAI | null {
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey = process.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY;
   if (!apiKey || apiKey === "MY_GEMINI_API_KEY" || apiKey.trim() === "") {
     return null;
   }

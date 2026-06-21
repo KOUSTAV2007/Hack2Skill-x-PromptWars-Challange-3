@@ -4,6 +4,7 @@ import {
   AIAnalysis 
 } from "../types";
 import { getFallbackAnalyzeResponse } from "../lib/fallback";
+import { getClientGemini } from "../lib/gemini";
 import { 
   Car, 
   Plane, 
@@ -134,6 +135,64 @@ export default function CarbonCalculator({ onDataChange, recentActions }: Carbon
     setLoading(true);
     setError(null);
     try {
+      // 1. Try to use Client-Side Gemini if configured via isolated environment variable
+      const clientGemini = getClientGemini();
+      if (clientGemini) {
+        const userPrompt = `
+Analyze this user's carbon footprint data and recent sustainability actions, and output a highly personalized, supportive, and structured road map.
+
+FOOTPRINT PARAMETERS:
+- Weekly Commute: ${data.transportDistance} km using ${data.transportType}
+- Yearly Flights: ${data.flightsPerYear} flights
+- Electricity Usage: ${data.electricityBill} kWh per month (Source: ${data.energySource})
+- Heating System: ${data.heatingType}
+- Dictated Diet: ${data.dietType}
+- Recycling Habits: ${data.recyclingHabits} (Waste index)
+
+COMPLETED GREEN ACTIONS RECENTLY:
+${recentActions && recentActions.length > 0 
+  ? recentActions.map((a: any) => `- ${a.title} (Impact Score: ${a.impactLevel})`).join('\n') 
+  : "None logged this week."}
+
+You MUST follow this exact JSON structure for your response. Do not output anything outside of the JSON block:
+{
+  "summary": "A 2-3 sentence engaging analysis of their primary carbon drivers.",
+  "projectedAnnualEmissions": "e.g., 5.4 tons CO2e/year",
+  "rating": "A-F grade based on their current habits compared to global developed world averages (approx 8.0 tons CO2e)",
+  "primaryDriver": "The biggest area of emission (e.g., Transport, Diet, Housing)",
+  "quickWins": [
+    {
+      "title": "Actionable title",
+      "impact": "High/Medium/Low",
+      "description": "Short explanation of how to execute and saved CO2 estimation"
+    }
+  ],
+  "longTermGoals": [
+    {
+      "title": "Long term structural change",
+      "timeframe": "Timeframe description",
+      "description": "What they should plan or invest in"
+    }
+  ]
+}
+`;
+
+        const response = await clientGemini.models.generateContent({
+          model: "gemini-3.5-flash",
+          contents: userPrompt,
+          config: {
+            responseMimeType: "application/json",
+          }
+        });
+
+        if (response.text) {
+          const parsed = JSON.parse(response.text);
+          setAnalysis(parsed);
+          return;
+        }
+      }
+
+      // 2. Fallback to API route
       const response = await fetch("/api/gemini/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -168,7 +227,7 @@ export default function CarbonCalculator({ onDataChange, recentActions }: Carbon
   const gradeDetails = getFidelityGrade(emissionsBreakdown.total);
 
   return (
-    <div id="carbon_calc_block" className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+    <section id="carbon_calc_block" className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start" aria-labelledby="panel_header_desc">
       {/* Parameters Panel */}
       <div id="calc_inputs_wrapper" className="lg:col-span-7 bg-white p-6 md:p-10 rounded-3xl border border-zinc-200/85 space-y-8 shadow-xs">
         <div>
@@ -184,7 +243,7 @@ export default function CarbonCalculator({ onDataChange, recentActions }: Carbon
           <div className="bg-zinc-50 p-5 rounded-2xl border border-zinc-200/70">
             <div className="flex items-center justify-between mb-3">
               <label className="text-xs font-black uppercase tracking-wider text-zinc-500 flex items-center gap-2">
-                <Car className="h-4 w-4 text-zinc-800" />
+                <Car className="h-4 w-4 text-zinc-800" aria-hidden="true" />
                 Commute Distance
               </label>
               <span className="text-xs font-mono font-bold bg-zinc-900 text-lime-400 py-0.5 px-2 rounded">{data.transportDistance} km/week</span>
@@ -197,6 +256,7 @@ export default function CarbonCalculator({ onDataChange, recentActions }: Carbon
               value={data.transportDistance}
               onChange={(e) => setData({ ...data, transportDistance: parseInt(e.target.value) })}
               className="w-full accent-zinc-900 cursor-pointer"
+              aria-label="Commute distance weekly range selector"
             />
             <div className="grid grid-cols-5 gap-1 mt-4">
               {Object.keys(TRANSPORT_FACTORS).map((key) => (
@@ -204,6 +264,7 @@ export default function CarbonCalculator({ onDataChange, recentActions }: Carbon
                   key={key}
                   type="button"
                   onClick={() => setData({ ...data, transportType: key })}
+                  aria-label={`Select transport type: ${key.replace("_", " ")}`}
                   className={`text-[10px] py-1.5 border rounded-lg transition-all capitalize whitespace-nowrap overflow-hidden text-ellipsis px-1 font-extrabold tracking-wide uppercase ${
                     data.transportType === key 
                       ? "border-zinc-900 bg-zinc-900 text-lime-400 shadow-2xs" 
@@ -221,7 +282,7 @@ export default function CarbonCalculator({ onDataChange, recentActions }: Carbon
           <div className="bg-zinc-50 p-5 rounded-2xl border border-zinc-200/70">
             <div className="flex items-center justify-between mb-3">
               <label className="text-xs font-black uppercase tracking-wider text-zinc-500 flex items-center gap-2">
-                <Plane className="h-4 w-4 text-zinc-800" />
+                <Plane className="h-4 w-4 text-zinc-800" aria-hidden="true" />
                 Air Travel
               </label>
               <span className="text-xs font-mono font-bold bg-zinc-900 text-lime-400 py-0.5 px-2 rounded text-rose-450">{data.flightsPerYear} flights/year</span>
@@ -234,6 +295,7 @@ export default function CarbonCalculator({ onDataChange, recentActions }: Carbon
               value={data.flightsPerYear}
               onChange={(e) => setData({ ...data, flightsPerYear: parseInt(e.target.value) })}
               className="w-full accent-zinc-900 cursor-pointer"
+              aria-label="Air travel annual flights selector"
             />
             <div className="flex justify-between text-[10px] text-zinc-400 font-bold uppercase tracking-wider mt-1 px-1">
               <span>0 (Local)</span>
@@ -246,7 +308,7 @@ export default function CarbonCalculator({ onDataChange, recentActions }: Carbon
           <div className="bg-zinc-50 p-5 rounded-2xl border border-zinc-200/70">
             <div className="flex items-center justify-between mb-3">
               <label className="text-xs font-black uppercase tracking-wider text-zinc-500 flex items-center gap-2">
-                <Home className="h-4 w-4 text-zinc-800" />
+                <Home className="h-4 w-4 text-zinc-800" aria-hidden="true" />
                 Electricity Consumption
               </label>
               <span className="text-xs font-mono font-bold bg-zinc-900 text-lime-400 py-0.5 px-2 rounded">{data.electricityBill} kWh/month</span>
@@ -259,6 +321,7 @@ export default function CarbonCalculator({ onDataChange, recentActions }: Carbon
               value={data.electricityBill}
               onChange={(e) => setData({ ...data, electricityBill: parseInt(e.target.value) })}
               className="w-full accent-zinc-900 cursor-pointer"
+              aria-label="Home electricity monthly consumption"
             />
             <div className="grid grid-cols-4 gap-1 mt-4">
               {Object.keys(ENERGY_FACTORS).map((key) => (
@@ -266,6 +329,7 @@ export default function CarbonCalculator({ onDataChange, recentActions }: Carbon
                   key={key}
                   type="button"
                   onClick={() => setData({ ...data, energySource: key })}
+                  aria-label={`Select energy feed: ${key.replace("_", " ")}`}
                   className={`text-[9px] py-1.5 border rounded-lg transition-all px-1 font-bold uppercase tracking-wider ${
                     data.energySource === key 
                       ? "border-zinc-900 bg-zinc-900 text-lime-400" 
@@ -282,12 +346,13 @@ export default function CarbonCalculator({ onDataChange, recentActions }: Carbon
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="bg-zinc-50 p-4 rounded-xl border border-zinc-200/70">
               <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest flex items-center gap-1.5 mb-2.5">
-                <Flame className="h-3.5 w-3.5 text-zinc-800" />
+                <Flame className="h-3.5 w-3.5 text-zinc-800" aria-hidden="true" />
                 Heating Engine
               </label>
               <select
                 value={data.heatingType}
                 onChange={(e) => setData({ ...data, heatingType: e.target.value })}
+                aria-label="Select home heating option"
                 className="w-full text-xs font-bold uppercase tracking-wider bg-white border border-zinc-200 py-2.5 px-3 rounded-xl text-zinc-800 focus:border-zinc-900 focus:outline-hidden"
               >
                 <option value="natural_gas">Gas Boiler</option>
@@ -299,12 +364,13 @@ export default function CarbonCalculator({ onDataChange, recentActions }: Carbon
 
             <div className="bg-zinc-50 p-4 rounded-xl border border-zinc-200/70">
               <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest flex items-center gap-1.5 mb-2.5">
-                <Utensils className="h-3.5 w-3.5 text-zinc-800" />
+                <Utensils className="h-3.5 w-3.5 text-zinc-800" aria-hidden="true" />
                 Diet Choice
               </label>
               <select
                 value={data.dietType}
                 onChange={(e) => setData({ ...data, dietType: e.target.value })}
+                aria-label="Select culinary dietary pattern"
                 className="w-full text-xs font-bold uppercase tracking-wider bg-white border border-zinc-200 py-2.5 px-3 rounded-xl text-zinc-800 focus:border-zinc-900 focus:outline-hidden"
               >
                 <option value="meat_heavy">Meat Heavy Options</option>
@@ -318,7 +384,7 @@ export default function CarbonCalculator({ onDataChange, recentActions }: Carbon
           {/* Lifestyle / Waste reduction */}
           <div className="bg-zinc-50 p-4 rounded-xl border border-zinc-200/70">
             <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest flex items-center gap-1.5 mb-3">
-              <Trash2 className="h-3.5 w-3.5 text-zinc-650" />
+              <Trash2 className="h-3.5 w-3.5 text-zinc-650" aria-hidden="true" />
               Circular Waste index
             </label>
             <div className="grid grid-cols-3 gap-2">
@@ -327,6 +393,7 @@ export default function CarbonCalculator({ onDataChange, recentActions }: Carbon
                   key={key}
                   type="button"
                   onClick={() => setData({ ...data, recyclingHabits: key })}
+                  aria-label={`Select waste index level: ${key.replace("_", " ")}`}
                   className={`text-xs py-2.5 border rounded-xl transition-all font-bold uppercase tracking-wider ${
                     data.recyclingHabits === key
                       ? "border-zinc-900 bg-zinc-900 text-lime-400"
@@ -350,12 +417,13 @@ export default function CarbonCalculator({ onDataChange, recentActions }: Carbon
             id="ai_report_trigger_btn"
             disabled={loading}
             onClick={fetchAIAnalysis}
+            aria-label="Trigger Gemini AI carbon audit"
             className="inline-flex items-center justify-center gap-2 bg-zinc-900 hover:bg-zinc-800 text-lime-400 border border-zinc-950 font-black uppercase tracking-wider text-xs py-3 px-6 rounded-xl transition-all active:scale-95 cursor-pointer disabled:opacity-50"
           >
             {loading ? (
-              <RefreshCw className="h-4 w-4 animate-spin text-lime-400" />
+              <RefreshCw className="h-4 w-4 animate-spin text-lime-400" aria-hidden="true" />
             ) : (
-              <Sparkles className="h-4 w-4 text-lime-400 fill-lime-400" />
+              <Sparkles className="h-4 w-4 text-lime-400 fill-lime-400" aria-hidden="true" />
             )}
             {loading ? "Analyzing variables..." : "Trigger Gemini AI carbon audit"}
           </button>
@@ -427,13 +495,12 @@ export default function CarbonCalculator({ onDataChange, recentActions }: Carbon
             </div>
           </div>
         </div>
-
         {/* AI Diagnostics Output Box - Slate style with high contrast */}
         {(analysis || error || loading) && (
-          <div className="bg-zinc-900 text-zinc-100 p-6 rounded-3xl shadow-md border border-zinc-950 leading-relaxed space-y-5">
+          <article className="bg-zinc-900 text-zinc-100 p-6 rounded-3xl shadow-md border border-zinc-950 leading-relaxed space-y-5" aria-labelledby="ai_report_header">
             <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
-              <span className="text-xs font-black text-lime-400 uppercase tracking-[0.15em] flex items-center gap-2">
-                <Sparkles className="h-3.5 w-3.5 fill-lime-400 text-lime-400" />
+              <span id="ai_report_header" className="text-xs font-black text-lime-400 uppercase tracking-[0.15em] flex items-center gap-2">
+                <Sparkles className="h-3.5 w-3.5 fill-lime-400 text-lime-400" aria-hidden="true" />
                 Gemini Carbon Strategist
               </span>
               <span className="text-[9px] font-bold bg-zinc-800 text-zinc-400 py-0.5 px-2 rounded-md font-mono border border-zinc-700">
@@ -443,14 +510,14 @@ export default function CarbonCalculator({ onDataChange, recentActions }: Carbon
 
             {loading && (
               <div className="py-8 text-center flex flex-col items-center gap-3">
-                <RefreshCw className="h-6 w-6 animate-spin text-lime-400" />
+                <RefreshCw className="h-6 w-6 animate-spin text-lime-400" aria-hidden="true" />
                 <span className="text-xs text-lime-400 font-bold uppercase tracking-wider">Drafting customized climate matrix...</span>
               </div>
             )}
 
             {error && (
-              <div className="bg-red-500/10 p-3.5 rounded-lg border border-red-500/20 text-red-200 text-xs flex items-start gap-2">
-                <AlertCircle className="h-4 w-4 text-red-400 shrink-0 mt-0.5" />
+              <div className="bg-red-500/10 p-3.5 rounded-lg border border-red-500/20 text-red-200 text-xs flex items-start gap-2" role="alert">
+                <AlertCircle className="h-4 w-4 text-red-400 shrink-0 mt-0.5" aria-hidden="true" />
                 <span>Error logging data: {error}</span>
               </div>
             )}
@@ -479,7 +546,7 @@ export default function CarbonCalculator({ onDataChange, recentActions }: Carbon
                 {/* Quick Wins List - Styled using template's green card equivalent blocks (p-6 bg-lime-300) */}
                 <div className="space-y-3">
                   <h5 className="font-black text-lime-400 uppercase tracking-widest text-[9px] flex items-center gap-1">
-                    <CheckCircle className="h-3.5 w-3.5" />
+                    <CheckCircle className="h-3.5 w-3.5" aria-hidden="true" />
                     Custom Quick Wins Active
                   </h5>
                   <div className="space-y-2">
@@ -498,7 +565,7 @@ export default function CarbonCalculator({ onDataChange, recentActions }: Carbon
                 {/* Long Term Goals */}
                 <div className="space-y-2 pt-3 border-t border-zinc-800">
                   <h5 className="font-black text-zinc-450 uppercase tracking-wider text-[9px] flex items-center gap-1">
-                    <TrendingDown className="h-3.5 w-3.5" />
+                    <TrendingDown className="h-3.5 w-3.5" aria-hidden="true" />
                     Decarbonization Roadmap Goals
                   </h5>
                   <div className="space-y-2.5">
@@ -506,7 +573,7 @@ export default function CarbonCalculator({ onDataChange, recentActions }: Carbon
                       <div key={idx} className="bg-zinc-800/40 p-2.5 rounded-lg border border-zinc-800">
                         <div className="flex items-center justify-between text-[11px] font-bold text-white uppercase">
                           <span className="flex items-center gap-1 font-extrabold">
-                            <ChevronRight className="h-3 w-3 text-lime-400 shrink-0" />
+                            <ChevronRight className="h-3 w-3 text-lime-400 shrink-0" aria-hidden="true" />
                             {goal.title}
                           </span>
                           <span className="text-[8px] text-lime-300 font-bold font-mono">({goal.timeframe})</span>
@@ -518,9 +585,9 @@ export default function CarbonCalculator({ onDataChange, recentActions }: Carbon
                 </div>
               </div>
             )}
-          </div>
+          </article>
         )}
       </div>
-    </div>
+    </section>
   );
 }

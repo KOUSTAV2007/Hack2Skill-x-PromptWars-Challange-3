@@ -48,8 +48,8 @@ export default function App() {
             
             {/* Logo Group */}
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-lime-400 rounded-full flex items-center justify-center text-zinc-900 border border-zinc-900 shadow-sm">
-                <Leaf className="w-4.5 h-4.5 text-zinc-900 stroke-[2.5]" />
+              <div className="w-8 h-8 bg-lime-400 rounded-full flex items-center justify-center text-zinc-900 border border-zinc-900 shadow-sm" aria-hidden="true">
+                <Leaf className="w-4.5 h-4.5 text-zinc-900 stroke-[2.5]" aria-hidden="true" />
               </div>
               <div>
                 <h1 className="text-base sm:text-lg font-black tracking-tight text-zinc-900 flex items-center gap-1.5 leading-none">
@@ -63,13 +63,13 @@ export default function App() {
             <div className="hidden md:flex items-center gap-6 text-xs">
               <div className="text-right border-r border-zinc-200 pr-5">
                 <span className="text-[10px] text-zinc-400 uppercase tracking-widest font-black flex items-center gap-1 justify-end">
-                  <Activity className="h-3 w-3 text-zinc-950" /> Habits Tracker
+                  <Activity className="h-3 w-3 text-zinc-950" aria-hidden="true" /> Habits Tracker
                 </span>
                 <span className="text-xs font-extrabold text-zinc-800 tracking-tight">{completedActions.length} completed</span>
               </div>
               <div className="text-right pr-1">
                 <span className="text-[10px] text-zinc-400 uppercase tracking-widest font-black flex items-center gap-1 justify-end">
-                  <Sparkles className="h-3 w-3 text-lime-600 fill-lime-400 mt-0.5" /> Offset Credit
+                  <Sparkles className="h-3 w-3 text-lime-600 fill-lime-400 mt-0.5" aria-hidden="true" /> Offset Credit
                 </span>
                 <span className="text-xs font-black text-zinc-950 font-mono">-{totalSavedCo2.toFixed(1)} KG/CO2</span>
               </div>
@@ -78,7 +78,7 @@ export default function App() {
             {/* Hackathon Badge */}
             <div className="bg-zinc-900 border border-zinc-950 rounded-xl py-1.5 px-3.5 shadow-sm text-white">
               <div className="flex items-center gap-2">
-                <Globe className="h-3.5 w-3.5 text-lime-400 animate-spin-slow" />
+                <Globe className="h-3.5 w-3.5 text-lime-400 animate-spin-slow" aria-hidden="true" />
                 <div className="text-left leading-none">
                   <p className="text-[9px] text-lime-400 font-extrabold uppercase tracking-[0.15em] leading-none">Google Prompt Wars</p>
                   <p className="text-[8px] text-zinc-400 font-medium mt-0.5">Hack2Skill Exclusive</p>
@@ -99,7 +99,7 @@ export default function App() {
           
           <div className="relative z-10 max-w-2xl space-y-4">
             <span className="inline-flex items-center gap-2 text-[10px] font-black text-lime-400 uppercase tracking-[0.2em] bg-zinc-800 py-1 px-3 rounded-full border border-zinc-700">
-              <Globe className="h-3.5 w-3.5" />
+              <Globe className="h-3.5 w-3.5" aria-hidden="true" />
               Empowering Climate Action with Generative AI
             </span>
             
@@ -125,38 +125,47 @@ export default function App() {
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 border-b border-zinc-200 pb-3">
           
           {/* Navigation Tabs - Bold typography styling */}
-          <div className="flex border border-zinc-200 p-1 bg-zinc-100/80 rounded-2xl md:max-w-xl w-full gap-1">
+          <div className="flex border border-zinc-200 p-1 bg-zinc-100/80 rounded-2xl md:max-w-xl w-full gap-1" role="tablist">
             <button
               onClick={() => setActiveTab("calculator")}
+              aria-selected={activeTab === "calculator"}
+              role="tab"
+              aria-label="Switch to Carbon Footprint Estimator Tab"
               className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl font-black text-xs uppercase tracking-wider transition-all cursor-pointer ${
                 activeTab === "calculator"
                   ? "bg-zinc-900 text-lime-400 shadow-xs border border-zinc-950"
                   : "text-zinc-500 hover:text-zinc-900 hover:bg-white/40"
               }`}
             >
-              <TrendingDown className="h-4 w-4 shrink-0" />
+              <TrendingDown className="h-4 w-4 shrink-0" aria-hidden="true" />
               1. Estimator
             </button>
             <button
               onClick={() => setActiveTab("habits")}
+              aria-selected={activeTab === "habits"}
+              role="tab"
+              aria-label="Switch to Sustainability Habits Log Tab"
               className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl font-black text-xs uppercase tracking-wider transition-all cursor-pointer ${
                 activeTab === "habits"
                   ? "bg-zinc-900 text-lime-400 shadow-xs border border-zinc-950"
                   : "text-zinc-500 hover:text-zinc-900 hover:bg-white/40"
               }`}
             >
-              <Activity className="h-4 w-4 shrink-0" />
+              <Activity className="h-4 w-4 shrink-0" aria-hidden="true" />
               2. Habits Log
             </button>
             <button
               onClick={() => setActiveTab("promptlab")}
+              aria-selected={activeTab === "promptlab"}
+              role="tab"
+              aria-label="Switch to AI Prompt Lab Tab"
               className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl font-black text-xs uppercase tracking-wider transition-all cursor-pointer ${
                 activeTab === "promptlab"
                   ? "bg-zinc-900 text-lime-400 shadow-xs border border-zinc-950"
                   : "text-zinc-500 hover:text-zinc-900 hover:bg-white/40"
               }`}
             >
-              <Sparkles className="h-4 w-4 shrink-0" />
+              <Sparkles className="h-4 w-4 shrink-0" aria-hidden="true" />
               3. AI Prompt Lab
             </button>
           </div>
@@ -196,12 +205,12 @@ export default function App() {
           
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-zinc-400 font-bold tracking-wider">
             <p className="flex items-center gap-2 text-zinc-500 uppercase text-[10px]">
-              <Leaf className="h-4 w-4 text-zinc-900 shrink-0" />
+              <Leaf className="h-4 w-4 text-zinc-900 shrink-0" aria-hidden="true" />
               © 2026 EcoSustain Carbon Prompt Lab. Built with Antigravity & Google Gemini.
             </p>
             <div className="flex items-center gap-4 text-[10px]">
               <span className="text-zinc-900 font-black flex items-center gap-1 uppercase">
-                <Award className="h-3.5 w-3.5 text-zinc-950" /> built by Koustav Mukherjee
+                <Award className="h-3.5 w-3.5 text-zinc-950" aria-hidden="true" /> built by Koustav Mukherjee
               </span>
             </div>
           </div>
