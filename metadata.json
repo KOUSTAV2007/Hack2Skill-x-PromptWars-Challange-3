@@ -1,0 +1,6 @@
+{
+  "name": "EcoSustain Carbon Prompt Lab",
+  "description": "An interactive carbon footprint estimator, action tracker, and AI Prompt Engineering Lab. Custom-built for the Google Prompt Wars hackathon to analyze, reduce, and optimize green living with Gemini.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

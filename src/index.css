@@ -1,0 +1,30 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Plus Jakarta Sans", "Inter", system-ui, sans-serif;
+  --font-display: "Plus Jakarta Sans", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: #fafafa; /* bg-zinc-50 equivalent */
+  color: #18181b; /* text-zinc-900 */
+}
+
+/* Elegant scrollbar details */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(163, 230, 53, 0.3); /* lime equivalent scrollbar */
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(163, 230, 53, 0.6);
+}
